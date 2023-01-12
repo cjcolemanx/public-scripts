@@ -1,25 +1,45 @@
 #! /bin/bash
+export MY_TEMPORARY_BOOKMARK
+export MY_TEMPORARY_BOOKMARK_PRE
+
+### Initialize
+MY_TEMPORARY_BOOKMARK=""
+MY_TEMPORARY_BOOKMARK_PRE=""
 
 bookmarks() {
 	help_function() {
 		echo ""
-		echo "usage: bookmarks [PARAMS] .. [BOOKMARK_DIR|BOOKMARK_NAME]"
+		echo "Utility for bookmark directories in the filesystem."
+		echo ""
+		echo "Usage: bookmarks [PARAMS] .. [BOOKMARK_DIR|BOOKMARK_NAME]"
+		echo ""
 		echo -e "\t-A Add a bookmark at with [BOOKMARK_DIR] path"
 		echo -e "\t-a Add a bookmark at the current directory"
-		echo -e "\t-B Go to [BOOKMARK_NAME] (WIP)"
+		echo -e "\t-B Go to [BOOKMARK_NAME]"
 		echo -e "\t-R Remove a bookmark with [BOOKMARK_NAME]"
 		echo -e "\t-r Remove a bookmark via select"
 		echo -e "\t-l List all stored bookmark"
+		echo -e "\t-T Create a temporary bookmark at the current location"
+		echo -e "\t-D Go to temporary bookmark"
+		echo -e "\t-h Display this help and exit"
+		echo ""
+		echo "You can use the '-T' flag to set a temporary bookmark, then navigate to that bookmark "
+		echo "with the '-D' flag."
+		echo ""
+		echo "If you just switched to a temporarily bookmarked directory, using the '-D' flag will "
+		echo "switch back and forth between your location before calling the temporary bookmark "
+		echo "and the current temporary bookmark location."
 		echo ""
 	}
 
+	### Just does this
 	print_title() {
 		echo ""
 		echo " ~ Bookmarks ~"
 	}
 	option_selected="DEFAULT"
 
-	while getopts "haA:B:R:rl" opt; do
+	while getopts "haA:B:R:rlTD" opt; do
 		case $opt in
 		A)
 			option_selected="ADD"
@@ -50,10 +70,44 @@ bookmarks() {
 			option_selected="LIST"
 			break
 			;;
+		T)
+			MY_TEMPORARY_BOOKMARK=$(pwd)
+			echo Temporary bookmark set at "$MY_TEMPORARY_BOOKMARK"
+			return
+			;;
+		D)
+			# Temporary bookmark must exist
+			if [ -n "$MY_TEMPORARY_BOOKMARK" ]; then
+
+				# If a previous jump exists and the user isn't in the bookmarked/jump-target directory
+				if [ -n "$MY_TEMPORARY_BOOKMARK_PRE" ] &&
+					[ "$MY_TEMPORARY_BOOKMARK_PRE" != "$MY_TEMPORARY_BOOKMARK" ] &&
+					[ "$MY_TEMPORARY_BOOKMARK_PRE" != "$(pwd)" ]; then
+
+					echo Going back to previous location before jump: "$MY_TEMPORARY_BOOKMARK_PRE"
+
+					cd "$MY_TEMPORARY_BOOKMARK_PRE" || return
+
+				else
+					# Save current directory before jump
+					MY_TEMPORARY_BOOKMARK_PRE=$(pwd)
+
+					echo Going to temporary bookmark at "$MY_TEMPORARY_BOOKMARK"
+
+					cd "$MY_TEMPORARY_BOOKMARK" || return
+
+				fi
+			else
+				echo No temporary bookmark has been set!
+
+			fi
+			return
+			;;
 		h)
 			option_selected="HELP"
 			help_function
 			;;
+
 		*)
 			help_function
 			;;
@@ -145,8 +199,7 @@ bookmarks() {
 			selection_is_valid=false
 			PS3='Select a Bookmark: '
 
-			declare -A bookmark_locations
-			bookmark_options=("Home")
+			local -A bookmark_locations=()
 
 			# Get All Options
 			while read -r p; do
@@ -215,10 +268,22 @@ bookmarks() {
 			echo ""
 			echo "Changing directory to $user_cd_msg_dir"
 
-			cd "$selected" || exit
+			cd "$selected" || return
 		fi
 	fi
 
+	# Reset Array
+	bookmark_options=()
+
 	# Give some Space
 	echo ""
+	return
 }
+
+### => Custom Aliases
+alias bkm="bookmarks"
+alias bkma="bookmarks -a"
+alias bkmb="bookmarks -B"
+alias bkml="bookmarks -l"
+alias bkt="bookmarks -T"
+alias bk="bookmarks -D"

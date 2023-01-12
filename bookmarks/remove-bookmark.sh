@@ -34,15 +34,15 @@ remove_bookmark() {
 	else
 		# Nothing to remove!
 		echo "There are no bookmarks to remove!"
-		exit # Stop Script
+		return
 	fi
 
 	# Build temp file
-	if [ -f "$HOME/bin/bookmarks/bookmarks.txt.tmp" ]; then
-		temp_bookmarks_file="$HOME/bin/bookmarks/bookmarks.txt.tmp"
+	if [ -f "$HOME/bin/bookmarks/~bookmarks.txt" ]; then
+		temp_bookmarks_file="$HOME/bin/bookmarks/~bookmarks.txt"
 	else
 		touch "$temp_bookmarks_file"
-		temp_bookmarks_file="$HOME/bin/bookmarks/bookmarks.txt.tmp"
+		temp_bookmarks_file="$HOME/bin/bookmarks/~bookmarks.txt"
 	fi
 
 	# Get Options from file
