@@ -36,3 +36,6 @@ Source the `bookmarks.sh` file in your shell profile or \_whatever_rc file.
 
 - `touch-nested` - got tired of using `mkdir ... && touch /../../../../file`, so
   this script handles creating any necessary parent folders
+
+- [ ] TODO: Modify sourcing in `bookmarks.sh` to be less naive and catered to my
+      directory structure
